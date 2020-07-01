@@ -1,9 +1,11 @@
 # coding:utf8
 
+# run: python jlog.py './file_pattern*' cmds
+
 # --------------------------------------------------------------------------------------- #
 # limit:cmd,offset:int,size:int|a(all)
 # --------------------------------------------------------------------------------------- #
-# re:cmd,extract_ex:bool,regexp:string[,regexp]...
+# grep:cmd,extract_ex:bool,regexp:string[,regexp]...
 # --------------------------------------------------------------------------------------- #
 # sort:cmd[,a|n:cmd[,sep:string[,col:int]]]
 # --------------------------------------------------------------------------------------- #
@@ -15,20 +17,19 @@
 # --------------------------------------------------------------------------------------- #
 # reverse:cmd
 # --------------------------------------------------------------------------------------- #
+# count:cmd
+# --------------------------------------------------------------------------------------- #
 
 import sys
 import glob
 import re
 
-"""
 if len(sys.argv) < 2:
     print('missing file pattern')
     exit()
 
-file_pattern = sys.argv[2]
-"""
+file_pattern = sys.argv[1]
 
-file_pattern = 'lifetime-all.2020-06-30.log'
 cmd_sep = ','
 
 
@@ -160,13 +161,13 @@ def parse_by_cmd(cmd: str, lines: list):
     """
     args = str.split(cmd, cmd_sep)[1:]
 
-    if str.startswith(cmd, 'limit,'):
+    if str.startswith(cmd, 'limit'):
         return parse_by_limit(args, lines)
 
-    if str.startswith(cmd, 're,'):
+    if str.startswith(cmd, 'grep'):
         return parse_by_regexp(args, lines)
 
-    if str.startswith(cmd, 'cut,'):
+    if str.startswith(cmd, 'cut'):
         return parse_by_cut(args, lines)
 
     if str.startswith(cmd, 'unique'):
@@ -174,6 +175,9 @@ def parse_by_cmd(cmd: str, lines: list):
 
     if str.startswith(cmd, 'sort'):
         return parse_by_sort(args, lines)
+
+    if str.startswith(cmd, 'count'):
+        return [str(len(lines))]
 
     if str.startswith(cmd, 'reverse'):
         lines.reverse()
@@ -189,7 +193,7 @@ for filename in glob.glob(file_pattern):
 # 依次解析命令
 print(sys.argv)
 lines = str.split(content, '\n')
-for arg in sys.argv[1:]:
+for arg in sys.argv[2:]:
     if str.startswith(arg, 'cmd_sep'):
         cmd_sep = ''.join(arg[7:])
         continue
