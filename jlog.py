@@ -1,17 +1,17 @@
 # coding:utf8
 
 # --------------------------------------------------------------------------------------- #
-# limit:cmd,offset:int,size:int|A(all)
+# limit:cmd,offset:int,size:int|a(all)
 # --------------------------------------------------------------------------------------- #
-# re:cmd,extract_e:bool,regexp:string[,regexp...]
+# re:cmd,extract_ex:bool,regexp:string[,regexp]...
 # --------------------------------------------------------------------------------------- #
-# sort:cmd,a|n:cmd,sep:string,col:int
+# sort:cmd[,a|n:cmd[,sep:string[,col:int]]]
 # --------------------------------------------------------------------------------------- #
-# unique:cmd,show_count:bool,sep:string,col:int
+# unique:cmd[,show_count:bool[,sep:string[,col:int]]]
 # --------------------------------------------------------------------------------------- #
-# cut,sep:string,joiner:string,field:int[,field...]
+# cut,sep:string,joiner:string,field:int[,field]...
 # --------------------------------------------------------------------------------------- #
-# cmd_sep[,]
+# cmd_sep[*]
 # --------------------------------------------------------------------------------------- #
 
 import sys
@@ -26,8 +26,9 @@ if len(sys.argv) < 2:
 file_pattern = sys.argv[2]
 """
 
-file_pattern = 'user-web.2019-10-30.user-web-002.0.log'
+file_pattern = 'lifetime-all.2020-06-30.log'
 cmd_sep = ','
+
 
 def parse_by_limit(args: list, lines: list):
     """
@@ -36,7 +37,6 @@ def parse_by_limit(args: list, lines: list):
     offset = int(args[0])
     size = args[1]
 
-    print(offset, size)
     if size == 'a' or size == 'all':
         if offset < 0:
             return lines[:len(lines)+offset+1]
@@ -51,7 +51,6 @@ def parse_by_limit(args: list, lines: list):
 def parse_by_regexp(args: list, lines: list):
     extract_ex = 't' == args[0] or 'true' == args[0]
     regexp = '.*'.join(args[1:])
-    print('\'%s\'' % regexp)
 
     match_lines = []
     can_extract = False
@@ -74,7 +73,43 @@ def parse_by_sort(args: list, lines: list):
 
 
 def parse_by_unique(args: list, lines: list):
-    return lines
+    args = parse_unique_and_sort_args(args)
+    show_count = 't' == args[0] or 'true' == args[0]
+    col = int(args[2])
+
+    unique_lines = []
+    line_col_map = {}
+    unique_map = {}
+
+    # 去重
+    for line in lines:
+        fileds = [line] if len(args[1]) < 1 else str.split(line, args[1])
+        key = fileds[col]
+        count = unique_map.get(key, 0)
+        if count == 0:
+            unique_lines.append(line)
+            line_col_map[line] = key
+        unique_map[key] = count+1
+
+    if not show_count:
+        return unique_lines
+
+    for i in range(0, len(unique_lines)):
+        line = unique_lines[i]
+        unique_lines[i] = ' '.join([str(unique_map[line_col_map[line]]), line])
+
+    return unique_lines
+
+
+def parse_unique_and_sort_args(args: list):
+    parsed_args = ['a', '', '0']
+    if len(args) > 2:
+        parsed_args[2] = args[2]
+    if len(args) > 1:
+        parsed_args[1] = args[1]
+    if len(args) > 0:
+        parsed_args[0] = args[0]
+    return parsed_args
 
 
 def parse_by_cut(args: list, lines: list):
@@ -116,6 +151,9 @@ def parse_by_cmd(cmd: str, content: str):
 
     if str.startswith(cmd, 'cut'):
         parsed_lines = parse_by_cut(args, lines)
+
+    if str.startswith(cmd, 'unique'):
+        parsed_lines = parse_by_unique(args, lines)
 
     return '\n'.join(parsed_lines)
 
