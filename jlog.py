@@ -9,9 +9,11 @@
 # --------------------------------------------------------------------------------------- #
 # unique:cmd[,show_count:bool[,sep:string[,col:int]]]
 # --------------------------------------------------------------------------------------- #
-# cut,sep:string,joiner:string,field:int[,field]...
+# cut:cmd,sep:string,joiner:string,field:int[,field]...
 # --------------------------------------------------------------------------------------- #
-# cmd_sep[*]
+# cmd_sep[*]:cmd
+# --------------------------------------------------------------------------------------- #
+# reverse:cmd
 # --------------------------------------------------------------------------------------- #
 
 import sys
@@ -69,6 +71,22 @@ def parse_by_regexp(args: list, lines: list):
 
 
 def parse_by_sort(args: list, lines: list):
+    args = parse_unique_and_sort_args(args)
+    sort_by_number = 'n' == args[0]
+    col = int(args[2])
+
+    def get_sort_token(line: str):
+        if len(args[1]) > 0:
+            fields = str.split(line, args[1])
+            line = ''
+            if len(fields) > col:
+                line = fields[col]
+
+        if sort_by_number and len(line) < 1:
+            line = '0'
+        return int(line) if sort_by_number else line
+
+    lines.sort(key=get_sort_token)
     return lines
 
 
@@ -87,6 +105,7 @@ def parse_by_unique(args: list, lines: list):
         key = fileds[col]
         count = unique_map.get(key, 0)
         if count == 0:
+            unique_lines.insert
             unique_lines.append(line)
             line_col_map[line] = key
         unique_map[key] = count+1
@@ -135,27 +154,30 @@ def parse_by_cut(args: list, lines: list):
     return joinned_lines
 
 
-def parse_by_cmd(cmd: str, content: str):
+def parse_by_cmd(cmd: str, lines: list):
     """
     按命令解析字符
     """
-    lines = str.split(content, '\n')
     args = str.split(cmd, cmd_sep)[1:]
-    parsed_lines = lines
 
-    if str.startswith(cmd, 'limit'):
-        parsed_lines = parse_by_limit(args, lines)
+    if str.startswith(cmd, 'limit,'):
+        return parse_by_limit(args, lines)
 
-    if str.startswith(cmd, 're'):
-        parsed_lines = parse_by_regexp(args, lines)
+    if str.startswith(cmd, 're,'):
+        return parse_by_regexp(args, lines)
 
-    if str.startswith(cmd, 'cut'):
-        parsed_lines = parse_by_cut(args, lines)
+    if str.startswith(cmd, 'cut,'):
+        return parse_by_cut(args, lines)
 
     if str.startswith(cmd, 'unique'):
-        parsed_lines = parse_by_unique(args, lines)
+        return parse_by_unique(args, lines)
 
-    return '\n'.join(parsed_lines)
+    if str.startswith(cmd, 'sort'):
+        return parse_by_sort(args, lines)
+
+    if str.startswith(cmd, 'reverse'):
+        lines.reverse()
+    return lines
 
 
 # 读取文件内容
@@ -166,10 +188,11 @@ for filename in glob.glob(file_pattern):
 
 # 依次解析命令
 print(sys.argv)
+lines = str.split(content, '\n')
 for arg in sys.argv[1:]:
     if str.startswith(arg, 'cmd_sep'):
         cmd_sep = ''.join(arg[7:])
         continue
-    content = parse_by_cmd(str.lower(arg), content)
+    lines = parse_by_cmd(str.lower(arg), lines)
 
-print(content)
+print('\n'.join(lines))
