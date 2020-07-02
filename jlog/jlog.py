@@ -188,12 +188,12 @@ def parse_by_cmd(cmd: str, lines: list):
 content = ''
 for filename in glob.glob(file_pattern):
     with open(filename, 'r', encoding='utf8') as fr:
-        # 通常日志文件末尾自带空行
-        content += fr.read()
+        content += fr.read() + '\n'
 
 # 依次解析命令
-print(sys.argv)
+# print(sys.argv)
 lines = str.split(content, '\n')
+lines = [line for line in lines if len(line) > 0]
 for arg in sys.argv[2:]:
     if str.startswith(arg, 'cmd_sep'):
         cmd_sep = ''.join(arg[7:])
