@@ -44,7 +44,6 @@ def parse_by_limit(args: list, lines: list):
         if offset < 0:
             return lines[:len(lines)+offset+1]
         return lines[offset:]
-
     if offset < 0:
         end = len(lines)+offset+1
         return lines[end-int(size):end]
@@ -82,11 +81,9 @@ def parse_by_sort(args: list, lines: list):
             line = ''
             if len(fields) > col:
                 line = fields[col]
-
         if sort_by_number and len(line) < 1:
             line = '0'
         return int(line) if sort_by_number else line
-
     lines.sort(key=get_sort_token)
     return lines
 
@@ -110,14 +107,11 @@ def parse_by_unique(args: list, lines: list):
             unique_lines.append(line)
             line_col_map[line] = key
         unique_map[key] = count+1
-
     if not show_count:
         return unique_lines
-
     for i in range(0, len(unique_lines)):
-        line = unique_lines[i]
-        unique_lines[i] = ' '.join([str(unique_map[line_col_map[line]]), line])
-
+        unique_lines = [
+            ' '.join([str(unique_map[line_col_map[line]]), line]) for line in unique_lines]
     return unique_lines
 
 
@@ -139,7 +133,7 @@ def parse_by_cut(args: list, lines: list):
     if len(args) < 1:
         return lines
     sep = args[0]
-    cols = args[2:]
+    cols = [int(arg) for arg in args[2:]]
     joiner = args[1] if len(args) > 1 else ''
 
     # 拼接指定列
@@ -147,10 +141,7 @@ def parse_by_cut(args: list, lines: list):
     for line in lines:
         fields = str.split(line, sep)
         if len(cols) > 0:
-            handled_fields = []
-            for col in cols:
-                handled_fields.append(fields[int(col)])
-            fields = handled_fields
+            fields = [fields[col] for col in cols]
         joinned_lines.append(joiner.join(fields))
     return joinned_lines
 
@@ -163,41 +154,34 @@ def parse_by_cmd(cmd: str, lines: list):
 
     if str.startswith(cmd, 'limit'):
         return parse_by_limit(args, lines)
-
     if str.startswith(cmd, 'grep'):
         return parse_by_regexp(args, lines)
-
     if str.startswith(cmd, 'cut'):
         return parse_by_cut(args, lines)
-
     if str.startswith(cmd, 'unique'):
         return parse_by_unique(args, lines)
-
     if str.startswith(cmd, 'sort'):
         return parse_by_sort(args, lines)
-
     if str.startswith(cmd, 'count'):
         return [str(len(lines))]
-
     if str.startswith(cmd, 'reverse'):
         lines.reverse()
     return lines
 
 
 # 读取文件内容
-content = ''
+lines = []
 for filename in glob.glob(file_pattern):
     with open(filename, 'r', encoding='utf8') as fr:
-        content += fr.read() + '\n'
+        lines.extend(str.strip(line, '\n')
+                     for line in fr.readlines() if len(line) > 0)
 
 # 依次解析命令
 # print(sys.argv)
-lines = str.split(content, '\n')
-lines = [line for line in lines if len(line) > 0]
+# lines = [line for line in lines if len(line) > 0]
 for arg in sys.argv[2:]:
     if str.startswith(arg, 'cmd_sep'):
         cmd_sep = ''.join(arg[7:])
         continue
     lines = parse_by_cmd(str.lower(arg), lines)
-
 print('\n'.join(lines))
