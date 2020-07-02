@@ -188,7 +188,8 @@ def parse_by_cmd(cmd: str, lines: list):
 content = ''
 for filename in glob.glob(file_pattern):
     with open(filename, 'r', encoding='utf8') as fr:
-        content += fr.read()+'\r\n'
+        # 通常日志文件末尾自带空行
+        content += fr.read()
 
 # 依次解析命令
 print(sys.argv)
