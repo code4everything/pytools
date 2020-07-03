@@ -24,7 +24,7 @@ def remove_by_file_pattern(args: list):
                 os.remove(path)
 
 
-print(sys.argv)
+# print(sys.argv)
 for arg in sys.argv[1:]:
     cmd_arg = str.split(arg, ',')[1:]
 
