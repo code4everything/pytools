@@ -6,9 +6,9 @@
 # rm:cmd,file_pattern:string
 # -------------------------------------------- #
 
-import glob
 import sys
 import os
+import re
 
 
 def remove_by_file_pattern(args: list):
@@ -16,10 +16,15 @@ def remove_by_file_pattern(args: list):
         print('missing file pattern')
         return
     file_pattern = args[0]
-    for filename in glob.glob(file_pattern):
-        os.remove(filename)
+    for (dirpath, dirnames, filenames) in os.walk('.'):
+        for filename in filenames:
+            path = '%s%s%s' % (dirpath, os.path.sep, filename)
+            if re.search(file_pattern, path):
+                print('remove file %s' % path)
+                os.remove(path)
 
 
+print(sys.argv)
 for arg in sys.argv[1:]:
     cmd_arg = str.split(arg, ',')[1:]
 
