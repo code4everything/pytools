@@ -1,6 +1,6 @@
 # coding:utf8
 
-# run: python jlog.py './file_pattern*' cmds
+# run: python fout.py './file_pattern*' cmds
 
 # --------------------------------------------------------------------------------------- #
 # limit:cmd,offset:int,size:int|a(all)
