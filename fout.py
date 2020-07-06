@@ -19,10 +19,13 @@
 # --------------------------------------------------------------------------------------- #
 # count:cmd
 # --------------------------------------------------------------------------------------- #
+# copy:cmd
+# --------------------------------------------------------------------------------------- #
 
 import sys
 import glob
 import re
+import pyperclip
 
 if len(sys.argv) < 2:
     print('missing file pattern')
@@ -166,6 +169,9 @@ def parse_by_cmd(cmd: str, lines: list):
         return [str(len(lines))]
     if str.startswith(cmd, 'reverse'):
         lines.reverse()
+    if str.startswith(cmd, 'copy'):
+        pyperclip.copy('\n'.join(lines))
+        return []
     return lines
 
 
