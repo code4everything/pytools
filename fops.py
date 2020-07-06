@@ -5,6 +5,12 @@
 # -------------------------------------------- #
 # rm:cmd,file_pattern:string
 # -------------------------------------------- #
+# mv:cmd,file_pattern:string,target:string
+# -------------------------------------------- #
+# cp:cmd,file_pattern:string,target:string
+# -------------------------------------------- #
+# find,root:string,file_pattern:string
+# -------------------------------------------- #
 
 import sys
 import os
