@@ -3,13 +3,13 @@
 # run: python fops.py cmds
 
 # -------------------------------------------- #
-# rm:cmd,file_pattern:string
+# rm:cmd,file_pattern:string[,root:string]
 # -------------------------------------------- #
-# mv:cmd,file_pattern:string,target:string
+# mv:cmd,file_pattern:string[,root:string]
 # -------------------------------------------- #
-# cp:cmd,file_pattern:string,target:string
+# cp:cmd,file_pattern:string[,root:string]
 # -------------------------------------------- #
-# find,root:string,file_pattern:string
+# find,file_pattern:string[,root:string]
 # -------------------------------------------- #
 
 import sys
@@ -17,12 +17,8 @@ import os
 import re
 
 
-def remove_by_file_pattern(args: list):
-    if len(args) < 1:
-        print('missing file pattern')
-        return
-    file_pattern = args[0]
-    for (dirpath, dirnames, filenames) in os.walk('.'):
+def remove_by(file_pattern: str, root: str):
+    for (dirpath, dirnames, filenames) in os.walk(root):
         for filename in filenames:
             path = '%s%s%s' % (dirpath, os.path.sep, filename)
             if re.search(file_pattern, path):
@@ -34,5 +30,14 @@ def remove_by_file_pattern(args: list):
 for arg in sys.argv[1:]:
     cmd_arg = str.split(arg, ',')[1:]
 
+    if len(cmd_arg) < 1:
+        print('missing file pattern')
+        exit()
+    file_pattern = cmd_arg[0]
+    root = '.'
+
+    if len(cmd_arg) > 1:
+        root = cmd_arg[1]
+
     if str.startswith(arg, 'rm'):
-        remove_by_file_pattern(cmd_arg)
+        remove_by(file_pattern, root)
